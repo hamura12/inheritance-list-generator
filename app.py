@@ -581,6 +581,13 @@ st.markdown("""
     <h1>法定相続情報一覧図　作成ツール</h1>
     <hr class="app-header-rule">
     <p>必要最低限の情報を入力するだけで、法務局提出用のエクセルファイルを自動生成します。</p>
+    <p style="margin-top:0.6rem !important;">
+        <a href="https://houmukyoku.moj.go.jp/homu/page7_000014.html"
+           target="_blank"
+           style="color:#B8960C;font-size:0.78rem;text-decoration:none;letter-spacing:0.3px;">
+            📎 参考：法務局「法定相続情報証明制度について」
+        </a>
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
