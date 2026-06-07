@@ -193,6 +193,58 @@ def generate(has_spouse=True, children_data=None,
                       f'（孫{j + 1}・代襲者）', alignment=al(2))
 
     # ══════════════════════════════════════════
+    # 罫線（関係線）
+    # ══════════════════════════════════════════
+    if groups:
+        TRUNK   = 12   # col L  … メイン縦幹線
+        GC_TRUNK = 21  # col U  … 孫グループ縦幹線
+
+        last_g    = groups[-1]
+        last_row  = last_g['start'] + last_g['rows'] - 1
+
+        # ── メイン縦幹線（col L）：行14 ～ 最終子グループ末尾 ──
+        set_border(ws, 14, TRUNK, top=1, left=1)
+        for _r in range(15, last_row):
+            set_border(ws, _r, TRUNK, left=1)
+        set_border(ws, last_row, TRUNK, bottom=1, left=1)
+
+        # ── 配偶者の婚姻線（col C = 3、二重線）──
+        if sp_row is not None:
+            for _r in range(sp_row, sp_row + 2):
+                set_border(ws, _r, 3, left=6)
+
+        # ── 各子グループへの横枝線 & 死亡子→孫の接続 ──
+        for g in groups:
+            r     = g['start']
+            child = g['child']
+
+            # 横枝線: col C(3) ～ col L(12) の top border
+            set_border(ws, r, 3,
+                       top=1, left=(6 if sp_row is not None else 1))
+            for _c in range(4, TRUNK):
+                set_border(ws, r, _c, top=1)
+            set_border(ws, r, TRUNK, top=1, left=1)
+
+            # 死亡子の場合：孫グループへの縦幹線 + 横枝線
+            if not child['alive']:
+                num_gc = child.get('num_grandchildren', 0)
+                if num_gc > 0:
+                    gc_end_row = r + (num_gc - 1) * GC_ROWS + (GC_ROWS - 1)
+
+                    # 孫縦幹線（col U）
+                    set_border(ws, r, GC_TRUNK, top=1, left=1)
+                    for _r in range(r + 1, gc_end_row + 1):
+                        set_border(ws, _r, GC_TRUNK, left=1)
+
+                    # 各孫への横枝線: col U(21) ～ col X(24)
+                    for j in range(num_gc):
+                        gc_r = r + j * GC_ROWS
+                        if j > 0:
+                            set_border(ws, gc_r, GC_TRUNK, top=1, left=1)
+                        for _c in range(GC_TRUNK + 1, 24):
+                            set_border(ws, gc_r, _c, top=1)
+
+    # ══════════════════════════════════════════
     # 以下余白
     # ══════════════════════════════════════════
     merge(ws, f'V{yuuhaku_row}', f'Z{yuuhaku_row}', '以下余白', alignment=al(2))
