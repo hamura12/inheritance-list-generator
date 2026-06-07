@@ -160,9 +160,104 @@ GENERATOR_MAP = {
 }
 
 st.set_page_config(page_title='法定相続情報一覧図 作成ツール', layout='centered')
-st.title('法定相続情報一覧図 作成ツール')
-st.caption('必要最低限の情報を入力するだけで、法務局提出用のエクセルファイルを自動生成します。')
-st.divider()
+
+# ── カスタムCSS ────────────────────────────────────────────────
+st.markdown("""
+<style>
+/* 全体背景 */
+.stApp { background-color: #F4F6F9; }
+
+/* メインコンテナ余白 */
+.block-container { padding-top: 1.5rem; padding-bottom: 3rem; }
+
+/* タイトルエリア */
+.app-header {
+    background: linear-gradient(135deg, #1B2A4A 0%, #2E4A7A 100%);
+    padding: 2rem 2rem 1.5rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    color: white;
+}
+.app-header h1 {
+    color: white !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    margin: 0 0 0.3rem 0 !important;
+    letter-spacing: -0.5px;
+}
+.app-header p {
+    color: rgba(255,255,255,0.8) !important;
+    font-size: 0.9rem !important;
+    margin: 0 !important;
+}
+
+/* セクション見出し */
+h2, [data-testid="stSubheader"] > div {
+    color: #1B2A4A !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    background-color: #EEF1F8;
+    padding: 0.5rem 0.8rem !important;
+    border-left: 4px solid #1B2A4A;
+    border-radius: 0 6px 6px 0;
+    margin-top: 0.5rem !important;
+}
+
+/* ラジオボタン・チェックボックスのラベル */
+.stRadio label, .stCheckbox label { color: #2C3E50 !important; }
+
+/* 生成ボタン */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #1B2A4A, #2E4A7A) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.7rem 2rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    width: 100% !important;
+    box-shadow: 0 4px 12px rgba(27,42,74,0.3) !important;
+    transition: all 0.2s !important;
+}
+.stButton > button[kind="primary"]:hover {
+    box-shadow: 0 6px 16px rgba(27,42,74,0.45) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ダウンロードボタン */
+.stDownloadButton > button {
+    background: linear-gradient(135deg, #1B6CA8, #2E8BC0) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    padding: 0.7rem !important;
+    box-shadow: 0 4px 12px rgba(27,108,168,0.3) !important;
+}
+
+/* 区切り線 */
+hr { border-color: #D0D7E8 !important; margin: 1.2rem 0 !important; }
+
+/* セレクトボックス */
+.stSelectbox > div > div {
+    border-color: #B0BDD0 !important;
+    border-radius: 6px !important;
+}
+
+/* キャプション */
+.stCaption { color: #6B7A99 !important; }
+</style>
+""", unsafe_allow_html=True)
+
+# ── ヘッダー ──────────────────────────────────────────────────
+st.markdown("""
+<div class="app-header">
+    <h1>📋 法定相続情報一覧図 作成ツール</h1>
+    <p>必要最低限の情報を入力するだけで、法務局提出用のエクセルファイルを自動生成します。</p>
+</div>
+""", unsafe_allow_html=True)
 
 # ── ① 配偶者 ────────────────────────────────────────────────
 st.subheader('① 配偶者について')
