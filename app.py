@@ -164,97 +164,153 @@ st.set_page_config(page_title='法定相続情報一覧図 作成ツール', lay
 # ── カスタムCSS ────────────────────────────────────────────────
 st.markdown("""
 <style>
-/* 全体背景 */
-.stApp { background-color: #F4F6F9; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
-/* メインコンテナ余白 */
-.block-container { padding-top: 1.5rem; padding-bottom: 3rem; }
+/* 全体背景・フォント */
+.stApp {
+    background-color: #E8EBF0;
+    font-family: 'Noto Sans JP', sans-serif;
+}
 
-/* タイトルエリア */
+/* メインコンテナ */
+.block-container {
+    padding-top: 0 !important;
+    padding-bottom: 3rem;
+    max-width: 760px;
+}
+
+/* ── ヘッダー ── */
 .app-header {
-    background: linear-gradient(135deg, #1B2A4A 0%, #2E4A7A 100%);
-    padding: 2rem 2rem 1.5rem 2rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-    color: white;
+    background: linear-gradient(160deg, #0D1B33 0%, #1A3056 60%, #0D1B33 100%);
+    padding: 2.2rem 2.5rem 2rem 2.5rem;
+    margin-bottom: 1.8rem;
+    border-bottom: 3px solid #B8960C;
+    position: relative;
+    overflow: hidden;
+}
+.app-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 40px,
+        rgba(255,255,255,0.015) 40px,
+        rgba(255,255,255,0.015) 80px
+    );
+}
+.app-header-label {
+    color: #B8960C;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
 }
 .app-header h1 {
-    color: white !important;
-    font-size: 1.8rem !important;
+    color: #FFFFFF !important;
+    font-family: 'Noto Serif JP', serif !important;
+    font-size: 1.7rem !important;
     font-weight: 700 !important;
-    margin: 0 0 0.3rem 0 !important;
-    letter-spacing: -0.5px;
+    margin: 0 0 0.5rem 0 !important;
+    letter-spacing: 1px;
+    line-height: 1.3 !important;
 }
 .app-header p {
-    color: rgba(255,255,255,0.8) !important;
-    font-size: 0.9rem !important;
+    color: rgba(255,255,255,0.65) !important;
+    font-size: 0.82rem !important;
     margin: 0 !important;
+    letter-spacing: 0.3px;
+}
+.app-header-rule {
+    border: none;
+    border-top: 1px solid rgba(184,150,12,0.4);
+    margin: 1rem 0 0.8rem 0;
 }
 
-/* セクション見出し */
+/* ── セクション見出し ── */
 h2, [data-testid="stSubheader"] > div {
-    color: #1B2A4A !important;
+    color: #FFFFFF !important;
     font-weight: 700 !important;
-    font-size: 1rem !important;
-    background-color: #EEF1F8;
-    padding: 0.5rem 0.8rem !important;
-    border-left: 4px solid #1B2A4A;
-    border-radius: 0 6px 6px 0;
-    margin-top: 0.5rem !important;
+    font-size: 0.88rem !important;
+    letter-spacing: 1.5px !important;
+    background: linear-gradient(90deg, #0D1B33, #1A3056) !important;
+    padding: 0.55rem 1rem 0.55rem 1.1rem !important;
+    border-left: 4px solid #B8960C !important;
+    border-radius: 2px !important;
+    margin-top: 0.8rem !important;
+    margin-bottom: 0.8rem !important;
+    box-shadow: 0 2px 8px rgba(13,27,51,0.2) !important;
 }
 
-/* ラジオボタン・チェックボックスのラベル */
-.stRadio label, .stCheckbox label { color: #2C3E50 !important; }
+/* ── 入力エリアの背景 ── */
+.stRadio, .stCheckbox, .stNumberInput, .stSelectbox {
+    background-color: #FFFFFF;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+}
 
-/* 生成ボタン */
+/* ── ラジオ・チェックボックス ── */
+.stRadio label, .stCheckbox label {
+    color: #1A2A42 !important;
+    font-weight: 500 !important;
+}
+
+/* ── 生成ボタン ── */
 .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #1B2A4A, #2E4A7A) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 0.7rem 2rem !important;
-    font-size: 1rem !important;
-    font-weight: 600 !important;
+    background: linear-gradient(135deg, #0D1B33 0%, #1A3056 100%) !important;
+    color: #FFFFFF !important;
+    border: 1px solid #B8960C !important;
+    border-radius: 3px !important;
+    padding: 0.75rem 2rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 2px !important;
     width: 100% !important;
-    box-shadow: 0 4px 12px rgba(27,42,74,0.3) !important;
-    transition: all 0.2s !important;
+    box-shadow: 0 4px 16px rgba(13,27,51,0.35), inset 0 1px 0 rgba(255,255,255,0.07) !important;
+    transition: all 0.2s ease !important;
 }
 .stButton > button[kind="primary"]:hover {
-    box-shadow: 0 6px 16px rgba(27,42,74,0.45) !important;
-    transform: translateY(-1px) !important;
+    background: linear-gradient(135deg, #162340 0%, #223D6A 100%) !important;
+    box-shadow: 0 6px 20px rgba(13,27,51,0.5), 0 0 0 1px #B8960C !important;
 }
 
-/* ダウンロードボタン */
+/* ── ダウンロードボタン ── */
 .stDownloadButton > button {
-    background: linear-gradient(135deg, #1B6CA8, #2E8BC0) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
+    background: linear-gradient(135deg, #0D1B33, #1A3056) !important;
+    color: #FFD166 !important;
+    border: 1px solid #B8960C !important;
+    border-radius: 3px !important;
     width: 100% !important;
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    padding: 0.7rem !important;
-    box-shadow: 0 4px 12px rgba(27,108,168,0.3) !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.5px !important;
+    padding: 0.75rem !important;
+    box-shadow: 0 4px 16px rgba(13,27,51,0.35) !important;
 }
 
-/* 区切り線 */
-hr { border-color: #D0D7E8 !important; margin: 1.2rem 0 !important; }
-
-/* セレクトボックス */
-.stSelectbox > div > div {
-    border-color: #B0BDD0 !important;
-    border-radius: 6px !important;
+/* ── 区切り線 ── */
+hr {
+    border: none !important;
+    border-top: 1px solid #C8CDD8 !important;
+    margin: 1.2rem 0 !important;
 }
 
-/* キャプション */
-.stCaption { color: #6B7A99 !important; }
+/* ── キャプション ── */
+.stCaption { color: #6B7A95 !important; font-size: 0.8rem !important; }
+
+/* ── セレクトボックス ── */
+.stSelectbox > div > div { border-radius: 3px !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── ヘッダー ──────────────────────────────────────────────────
 st.markdown("""
 <div class="app-header">
-    <h1>📋 法定相続情報一覧図 作成ツール</h1>
+    <div class="app-header-label">Legal Document Tool</div>
+    <h1>法定相続情報一覧図　作成ツール</h1>
+    <hr class="app-header-rule">
     <p>必要最低限の情報を入力するだけで、法務局提出用のエクセルファイルを自動生成します。</p>
 </div>
 """, unsafe_allow_html=True)
