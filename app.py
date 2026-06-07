@@ -137,6 +137,250 @@ def _compute_candidates(has_spouse, has_children, num_children,
     return cands
 
 
+# ── 相続関係図プレビュー ──────────────────────────────────────────
+
+def _generate_preview_svg(has_spouse, has_children, num_children,
+                           parents_status, has_siblings, siblings_data,
+                           which_parent, has_daishuu, appl_label):
+    """相続関係のSVGプレビューを生成してHTML文字列を返す。"""
+    BW, BH  = 100, 42
+    NAVY    = '#1B2A4A'
+    GOLD    = '#B8960C'
+    WHITE   = '#FFFFFF'
+    HEIR_BG = '#EDE8DF'
+    DEAD_BG = '#C5BDB0'
+    APPL_BG = '#FFF8E1'
+    TDARK   = '#1A2030'
+    TDEAD   = '#5A4F47'
+    LC      = '#4A5A7A'
+    W       = 720
+
+    def box(cx, cy, label, dec=False, appl=False, dead=False):
+        x, y = cx - BW // 2, cy - BH // 2
+        if dec:
+            bg, sc, sw, tc = NAVY, NAVY, 2, WHITE
+        elif appl:
+            bg, sc, sw, tc = APPL_BG, GOLD, 2.5, TDARK
+        elif dead:
+            bg, sc, sw, tc = DEAD_BG, '#8A7A6A', 1.5, TDEAD
+        else:
+            bg, sc, sw, tc = HEIR_BG, '#8A9AB8', 1.5, TDARK
+        s = [
+            f'<rect x="{x}" y="{y}" width="{BW}" height="{BH}" rx="4" '
+            f'fill="{bg}" stroke="{sc}" stroke-width="{sw}"/>',
+            f'<text x="{cx}" y="{cy+1}" text-anchor="middle" dominant-baseline="middle" '
+            f'font-size="12" fill="{tc}" font-weight="bold" '
+            f'font-family="Noto Sans JP,sans-serif">{label}</text>',
+        ]
+        if dec:
+            s.append(
+                f'<text x="{cx}" y="{y-10}" text-anchor="middle" '
+                f'font-size="10" fill="#4A5A7A" font-family="sans-serif">（被相続人）</text>'
+            )
+        if appl:
+            s.append(
+                f'<rect x="{x-2}" y="{y-2}" width="{BW+4}" height="{BH+4}" '
+                f'rx="5" fill="none" stroke="{GOLD}" stroke-width="2" stroke-dasharray="5,3"/>'
+            )
+            s.append(
+                f'<text x="{x+BW}" y="{y-8}" text-anchor="end" font-size="9" '
+                f'fill="{GOLD}" font-family="sans-serif" font-weight="bold">▶ 申出人</text>'
+            )
+        if dead:
+            s.append(
+                f'<text x="{cx}" y="{y-8}" text-anchor="middle" font-size="9" '
+                f'fill="#8A6A5A" font-family="sans-serif">（故）</text>'
+            )
+        return ''.join(s)
+
+    def ml(x1, x2, y):   # 婚姻（二重線）
+        return (
+            f'<line x1="{x1}" y1="{y-2}" x2="{x2}" y2="{y-2}" '
+            f'stroke="{LC}" stroke-width="1.5"/>'
+            f'<line x1="{x1}" y1="{y+2}" x2="{x2}" y2="{y+2}" '
+            f'stroke="{LC}" stroke-width="1.5"/>'
+        )
+
+    def hl(x1, x2, y):
+        return (f'<line x1="{x1}" y1="{y}" x2="{x2}" y2="{y}" '
+                f'stroke="{LC}" stroke-width="1.5"/>')
+
+    def vl(x, y1, y2):
+        return (f'<line x1="{x}" y1="{y1}" x2="{x}" y2="{y2}" '
+                f'stroke="{LC}" stroke-width="1.5"/>')
+
+    def wrap(h, els):
+        return (
+            '<div style="background:#D4C5AE;border-radius:8px;'
+            'padding:16px 20px 10px;margin:16px 0;border:1px solid #B8A882;">'
+            '<p style="text-align:center;font-size:0.78rem;color:#6B5040;'
+            'margin:0 0 8px;font-weight:600;letter-spacing:2px;">相 続 関 係 プ レ ビ ュ ー</p>'
+            f'<svg viewBox="0 0 {W} {h}" width="100%" xmlns="http://www.w3.org/2000/svg">'
+            + ''.join(els) +
+            '</svg></div>'
+        )
+
+    els = []
+
+    # ─── 代襲相続 ───────────────────────────────────────────
+    if has_daishuu:
+        els.append(box(W // 2, 110, '被相続人', dec=True))
+        els.append(
+            f'<text x="{W//2}" y="185" text-anchor="middle" font-size="12" '
+            f'fill="#5A4A3A" font-family="sans-serif">（代襲相続）別途ご確認ください</text>'
+        )
+        return wrap(220, els)
+
+    # ─── 子あり ──────────────────────────────────────────────
+    if has_children:
+        n    = int(num_children)
+        SHOW = min(n, 5)
+
+        if has_spouse:
+            dec_cx, dec_cy = W // 2 - 75, 100
+            sp_cx          = W // 2 + 75
+            is_a_sp        = (appl_label == '配偶者')
+            els.append(ml(dec_cx + BW // 2, sp_cx - BW // 2, dec_cy))
+            els.append(box(dec_cx, dec_cy, '被相続人', dec=True))
+            els.append(box(sp_cx,  dec_cy, '配偶者',   appl=is_a_sp))
+        else:
+            dec_cx, dec_cy = W // 2, 90
+            els.append(box(dec_cx, dec_cy, '被相続人', dec=True))
+
+        child_y = 230
+        step    = min(130, (W - 60) // max(SHOW, 1))
+        start_x = W // 2 - step * (SHOW - 1) // 2
+        mid_y   = (dec_cy + BH // 2 + child_y - BH // 2) // 2
+
+        els.append(vl(dec_cx, dec_cy + BH // 2, mid_y))
+        if SHOW > 1:
+            els.append(hl(start_x, start_x + step * (SHOW - 1), mid_y))
+        for j in range(SHOW):
+            cx  = start_x + j * step
+            lbl = (f'子{j+1}〜子{n}' if (n > SHOW and j == SHOW - 1) else f'子{j+1}')
+            is_a_c = (appl_label == f'子{j+1}')
+            els.append(vl(cx, mid_y, child_y - BH // 2))
+            els.append(box(cx, child_y, lbl, appl=is_a_c))
+
+        return wrap(300, els)
+
+    # ─── 両親とも存命 ─────────────────────────────────────────
+    if parents_status == '両親とも存命':
+        f_cx, f_cy   = 195, 85
+        m_cx, m_cy   = 385, 85
+        dec_cx, dec_cy = 285, 215
+        sp_cx          = dec_cx + BW + 50
+
+        mid_x = (f_cx + BW // 2 + m_cx - BW // 2) // 2
+        els += [
+            ml(f_cx + BW // 2, m_cx - BW // 2, f_cy),
+            vl(mid_x, f_cy + BH // 2, dec_cy - BH // 2),
+            ml(dec_cx + BW // 2, sp_cx - BW // 2, dec_cy),
+            box(f_cx,   f_cy,   '父',    appl=(appl_label == '父')),
+            box(m_cx,   m_cy,   '母',    appl=(appl_label == '母')),
+            box(dec_cx, dec_cy, '被相続人', dec=True),
+            box(sp_cx,  dec_cy, '配偶者',  appl=(appl_label == '配偶者')),
+        ]
+        return wrap(290, els)
+
+    # ─── 親１名 ───────────────────────────────────────────────
+    if parents_status == '父または母のみ存命':
+        pl             = which_parent or '親'
+        p_cx,  p_cy   = 220, 85
+        dec_cx, dec_cy = 380, 215
+        sp_cx          = dec_cx + BW + 50
+        is_a_p  = (appl_label in ('親', pl))
+        els += [
+            (f'<line x1="{p_cx}" y1="{p_cy + BH // 2}" '
+             f'x2="{dec_cx}" y2="{dec_cy - BH // 2}" '
+             f'stroke="{LC}" stroke-width="1.5"/>'),
+            ml(dec_cx + BW // 2, sp_cx - BW // 2, dec_cy),
+            box(p_cx,   p_cy,   pl,        appl=is_a_p),
+            box(dec_cx, dec_cy, '被相続人', dec=True),
+            box(sp_cx,  dec_cy, '配偶者',   appl=(appl_label == '配偶者')),
+        ]
+        return wrap(290, els)
+
+    # ─── 兄弟姉妹 ─────────────────────────────────────────────
+    if has_siblings:
+        dec_cx, dec_cy = 100, 215
+        sp_cx          = dec_cx + BW + 50  # 250
+
+        SHOW_S    = min(len(siblings_data), 3)
+        sib_start = 390
+        sib_step  = 140
+        sib_cxs   = [sib_start + j * sib_step for j in range(SHOW_S)]
+        last_x    = sib_cxs[-1] if sib_cxs else dec_cx
+
+        # 親（故人）
+        mid_scene = (dec_cx + last_x) // 2
+        f_cx = mid_scene - 85
+        m_cx = mid_scene + 85
+        f_cy = m_cy = 75
+        bar_y    = (f_cy + BH // 2 + dec_cy - BH // 2) // 2
+        mid_par  = (f_cx + BW // 2 + m_cx - BW // 2) // 2
+
+        els.append(ml(f_cx + BW // 2, m_cx - BW // 2, f_cy))
+        els.append(box(f_cx, f_cy, '父', dead=True))
+        els.append(box(m_cx, m_cy, '母', dead=True))
+
+        # 横棒（親→子供たち）
+        all_cx = [dec_cx] + sib_cxs
+        els.append(vl(mid_par, f_cy + BH // 2, bar_y))
+        if len(all_cx) > 1:
+            els.append(hl(all_cx[0], all_cx[-1], bar_y))
+        for cx in all_cx:
+            els.append(vl(cx, bar_y, dec_cy - BH // 2))
+
+        # 被相続人
+        els.append(box(dec_cx, dec_cy, '被相続人', dec=True))
+
+        # 配偶者
+        if has_spouse:
+            is_a_sp = (appl_label == '配偶者')
+            els.append(ml(dec_cx + BW // 2, sp_cx - BW // 2, dec_cy))
+            els.append(box(sp_cx, dec_cy, '配偶者', appl=is_a_sp))
+
+        # 兄弟姉妹 ＋ 甥姪
+        max_y = dec_cy
+        for j, scx in enumerate(sib_cxs):
+            sib   = siblings_data[j]
+            alive = sib.get('alive', True)
+            nc    = sib.get('num_children', 0)
+            is_a_s = (appl_label in (
+                f'兄弟姉妹{j+1}', f'兄弟姉妹{j+1}（生存）'))
+            els.append(box(scx, dec_cy, f'兄弟姉妹{j+1}', appl=is_a_s, dead=not alive))
+
+            if not alive and nc > 0:
+                SHOW_N  = min(nc, 2)
+                niece_y = dec_cy + 115
+                max_y   = max(max_y, niece_y)
+                n_step  = 80
+                n_start = scx - (SHOW_N - 1) * n_step // 2
+                n_mid   = (dec_cy + BH // 2 + niece_y - BH // 2) // 2
+                els.append(vl(scx, dec_cy + BH // 2, n_mid))
+                if SHOW_N > 1:
+                    els.append(hl(n_start, n_start + n_step * (SHOW_N - 1), n_mid))
+                for k in range(SHOW_N):
+                    ncx   = n_start + k * n_step
+                    is_a_n = (appl_label == f'兄弟姉妹{j+1}の子{k+1}（甥・姪）')
+                    els.append(vl(ncx, n_mid, niece_y - BH // 2))
+                    els.append(box(ncx, niece_y, f'甥・姪{k+1}', appl=is_a_n))
+
+        extra = len(siblings_data) - SHOW_S
+        if extra > 0:
+            els.append(
+                f'<text x="{last_x + 70}" y="{dec_cy + 6}" font-size="12" '
+                f'fill="#6B5E4A" font-family="sans-serif">…他{extra}名</text>'
+            )
+
+        return wrap(max_y + BH // 2 + 55, els)
+
+    # Fallback
+    els.append(box(W // 2, 100, '被相続人', dec=True))
+    return wrap(200, els)
+
+
 import generators.spouse_children as spouse_children
 import generators.children_only as children_only
 import generators.spouse_parent1 as spouse_parent1
@@ -417,6 +661,7 @@ if not has_children and parents_status == '両親とも死亡':
 # ── 申出人の選択（代襲相続以外の全ケースで表示）──────────────
 appl_start = None
 appl_end   = None
+appl_label = None
 
 if not has_daishuu:
     candidates = _compute_candidates(
@@ -433,10 +678,22 @@ if not has_daishuu:
             key='applicant_sel',
         )
         _, appl_start, appl_end = next(c for c in candidates if c[0] == selected)
+        appl_label = selected
     elif len(candidates) == 1:
         # 候補が1人だけの場合は自動確定（表示のみ）
         appl_start = candidates[0][1]
         appl_end   = candidates[0][2]
+        appl_label = candidates[0][0]
+
+# ── 相続関係プレビュー ────────────────────────────────────────
+st.markdown(
+    _generate_preview_svg(
+        has_spouse, has_children, num_children,
+        parents_status, has_siblings, siblings_data,
+        which_parent, has_daishuu, appl_label,
+    ),
+    unsafe_allow_html=True,
+)
 
 # ── 生成ボタン ───────────────────────────────────────────────
 st.divider()
