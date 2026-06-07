@@ -570,6 +570,69 @@ hr {
 
 /* ── セレクトボックス ── */
 .stSelectbox > div > div { border-radius: 2px !important; }
+
+/* ── ラジオボタン → トグルボタン風 ── */
+
+/* radio-group を横並びボタン帯に */
+[data-testid="stRadio"] [data-baseweb="radio-group"] {
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    border: 1px solid #1b2436 !important;
+    border-radius: 2px !important;
+    overflow: hidden !important;
+    gap: 0 !important;
+    background: #fffdf8 !important;
+}
+
+/* 各ラジオ項目 */
+[data-testid="stRadio"] [data-baseweb="radio"] {
+    display: flex !important;
+    align-items: center !important;
+    padding: 7px 18px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    background: #fffdf8 !important;
+    border-right: 1px solid #1b2436 !important;
+    transition: background 0.15s, color 0.15s !important;
+    gap: 0 !important;
+    min-height: unset !important;
+}
+[data-testid="stRadio"] [data-baseweb="radio"]:last-child {
+    border-right: none !important;
+}
+
+/* 丸いインジケーターを非表示 */
+[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
+    display: none !important;
+}
+
+/* ラジオのテキスト */
+[data-testid="stRadio"] [data-baseweb="radio"] p {
+    font-size: 0.88rem !important;
+    color: #1b2436 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+/* 選択中: ネイビー塗りつぶし */
+[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) {
+    background: #1b2436 !important;
+}
+[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) p {
+    color: #f5f0e6 !important;
+}
+
+/* ラジオ全体の余白調整 */
+[data-testid="stRadio"] {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0.2rem 0.8rem !important;
+}
+[data-testid="stRadio"] > label {
+    font-size: 0.9rem !important;
+    color: #262420 !important;
+    margin-bottom: 6px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
