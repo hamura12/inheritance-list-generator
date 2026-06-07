@@ -546,6 +546,26 @@ hr {
 
 /* ── セレクトボックス ── */
 .stSelectbox > div > div { border-radius: 3px !important; }
+
+/* ── リセットボタン ── */
+.stButton > button[kind="secondary"] {
+    background: transparent !important;
+    color: #4A5A7A !important;
+    border: 1px solid #8A9AB8 !important;
+    border-radius: 3px !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    padding: 0.3rem 0.9rem !important;
+    width: auto !important;
+    box-shadow: none !important;
+    letter-spacing: 0.5px !important;
+}
+.stButton > button[kind="secondary"]:hover {
+    background: rgba(26,48,86,0.08) !important;
+    border-color: #4A5A7A !important;
+    color: #1B2A4A !important;
+    box-shadow: none !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -558,6 +578,14 @@ st.markdown("""
     <p>必要最低限の情報を入力するだけで、法務局提出用のエクセルファイルを自動生成します。</p>
 </div>
 """, unsafe_allow_html=True)
+
+# ── リセットボタン ────────────────────────────────────────────
+_sp, _rst = st.columns([5, 1])
+with _rst:
+    if st.button('↺ リセット', key='reset_btn',
+                 help='入力内容をすべてクリアして最初からやり直します'):
+        st.session_state.clear()
+        st.rerun()
 
 # ── ① 配偶者 ────────────────────────────────────────────────
 st.subheader('① 配偶者について')
