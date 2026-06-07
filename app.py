@@ -421,20 +421,23 @@ st.markdown("""
     background-color: #e9e4d8;
     background-image: radial-gradient(circle at 50% -100px, #f4efe4, #e9e4d8 65%);
     font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+    overflow-x: hidden;
 }
 .block-container {
-    padding-top: 0 !important;
-    padding-bottom: 3rem;
+    padding: 0 1rem 3rem 1rem !important;
     max-width: 760px;
 }
 
-/* ── ヘッダー ── */
+/* ── ヘッダー（画面幅いっぱいに拡張） ── */
 .app-header {
     background: linear-gradient(180deg, #232f47 0%, #1b2436 100%);
     border-bottom: 3px solid #a9853f;
     box-shadow: 0 3px 16px rgba(0,0,0,.28);
     padding: 2.2rem 2.5rem 1.8rem;
     margin-bottom: 1.6rem;
+    margin-left: calc(50% - 50vw);
+    width: 100vw;
+    box-sizing: border-box;
     text-align: center;
 }
 .app-header-label {
