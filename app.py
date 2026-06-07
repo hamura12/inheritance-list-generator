@@ -168,7 +168,7 @@ st.markdown("""
 
 /* 全体背景・フォント */
 .stApp {
-    background-color: #DDD0BB;
+    background-color: #C8B89A;
     font-family: 'Noto Sans JP', sans-serif;
 }
 
@@ -246,7 +246,7 @@ h2, [data-testid="stSubheader"] > div {
 
 /* ── 入力エリアの背景 ── */
 .stRadio, .stCheckbox, .stNumberInput, .stSelectbox {
-    background-color: #C8B89A;
+    background-color: #B5A282;
     padding: 0.3rem 0.8rem;
     border-radius: 4px;
 }
