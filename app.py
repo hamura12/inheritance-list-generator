@@ -405,6 +405,11 @@ GENERATOR_MAP = {
 
 st.set_page_config(page_title='法定相続情報一覧図 作成ツール', layout='centered')
 
+# ── リセット用カウンター（全ウィジェットのキーに付与して確実リセット）────
+if 'run_id' not in st.session_state:
+    st.session_state.run_id = 0
+_k = st.session_state.run_id
+
 # ── カスタムCSS ────────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -582,9 +587,11 @@ st.markdown("""
 # ── リセットボタン ────────────────────────────────────────────
 _sp, _rst = st.columns([5, 1])
 with _rst:
-    if st.button('↺ リセット', key='reset_btn',
+    if st.button('↺ リセット', key=f'reset_btn_{_k}',
                  help='入力内容をすべてクリアして最初からやり直します'):
+        _new_k = _k + 1
         st.session_state.clear()
+        st.session_state.run_id = _new_k
         st.rerun()
 
 # ── ① 配偶者 ────────────────────────────────────────────────
@@ -593,7 +600,7 @@ has_spouse = st.radio(
     '被相続人に配偶者はいますか？',
     ['はい', 'いいえ'],
     horizontal=True,
-    key='has_spouse',
+    key=f'has_spouse_{_k}',
 ) == 'はい'
 
 # ── ② 子 ────────────────────────────────────────────────────
@@ -602,7 +609,7 @@ has_children = st.radio(
     '被相続人に子（実子・養子を含む）はいますか？',
     ['はい', 'いいえ'],
     horizontal=True,
-    key='has_children',
+    key=f'has_children_{_k}',
 ) == 'はい'
 
 # 子あり → 人数 ＋ 代襲相続
@@ -613,11 +620,11 @@ if has_children:
     num_children = st.number_input(
         '子は何人いますか？',
         min_value=1, max_value=99, value=1, step=1,
-        key='num_children',
+        key=f'num_children_{_k}',
     )
     has_daishuu = st.checkbox(
         '代襲相続が生じている（子が被相続人より先に死亡し、その子＝孫が相続人となる場合）',
-        key='has_daishuu',
+        key=f'has_daishuu_{_k}',
     )
 
 # ── ③ 親（子なしの場合のみ表示）────────────────────────────
@@ -630,14 +637,14 @@ if not has_children:
         '被相続人の親（父・母）は存命ですか？',
         ['両親とも存命', '父または母のみ存命', '両親とも死亡'],
         horizontal=False,
-        key='parents_status',
+        key=f'parents_status_{_k}',
     )
     if parents_status == '父または母のみ存命':
         which_parent = st.radio(
             '存命の親は？',
             ['父', '母'],
             horizontal=True,
-            key='which_parent',
+            key=f'which_parent_{_k}',
         )
 
 # ── ④ 兄弟姉妹（子なし・親なしの場合のみ表示）──────────────
@@ -652,17 +659,17 @@ if not has_children and parents_status == '両親とも死亡':
         '被相続人に兄弟姉妹はいますか？',
         ['はい', 'いいえ'],
         horizontal=True,
-        key='has_siblings',
+        key=f'has_siblings_{_k}',
     ) == 'はい'
     if has_siblings:
         num_siblings = st.number_input(
             '兄弟姉妹は何人いますか？',
             min_value=1, max_value=99, value=1, step=1,
-            key='num_siblings',
+            key=f'num_siblings_{_k}',
         )
         has_half_sib = st.checkbox(
             '父母の一方のみを同じくする兄弟姉妹（半血兄弟姉妹）がいる',
-            key='has_half_sib',
+            key=f'has_half_sib_{_k}',
         )
         st.caption('各兄弟姉妹の状態を入力してください。')
         siblings_data = []
@@ -673,7 +680,7 @@ if not has_children and parents_status == '両親とも死亡':
                     f'兄弟姉妹{i}',
                     ['生存', '死亡（代襲相続あり）', '死亡（代襲相続なし）'],
                     horizontal=True,
-                    key=f'sib_{i}_alive',
+                    key=f'sib_{i}_alive_{_k}',
                 )
             alive = (sib_status == '生存')
             num_nieces = 0
@@ -682,7 +689,7 @@ if not has_children and parents_status == '両親とも死亡':
                     num_nieces = st.number_input(
                         f'子（甥・姪）の人数',
                         min_value=1, max_value=99, value=1, step=1,
-                        key=f'sib_{i}_nieces',
+                        key=f'sib_{i}_nieces_{_k}',
                     )
             siblings_data.append({'alive': alive, 'num_children': int(num_nieces)})
 
@@ -703,7 +710,7 @@ if not has_daishuu:
         selected = st.selectbox(
             '申出人（法定相続情報の申出を行う相続人）はどなたですか？',
             labels,
-            key='applicant_sel',
+            key=f'applicant_sel_{_k}',
         )
         _, appl_start, appl_end = next(c for c in candidates if c[0] == selected)
         appl_label = selected
