@@ -246,14 +246,15 @@ if not has_children and parents_status == '両親とも死亡':
         for i in range(1, int(num_siblings) + 1):
             cols = st.columns([3, 3])
             with cols[0]:
-                alive = st.radio(
+                sib_status = st.radio(
                     f'兄弟姉妹{i}',
-                    ['生存', '死亡（代襲相続あり）'],
+                    ['生存', '死亡（代襲相続あり）', '死亡（代襲相続なし）'],
                     horizontal=True,
                     key=f'sib_{i}_alive',
-                ) == '生存'
+                )
+            alive = (sib_status == '生存')
             num_nieces = 0
-            if not alive:
+            if sib_status == '死亡（代襲相続あり）':
                 with cols[1]:
                     num_nieces = st.number_input(
                         f'子（甥・姪）の人数',
