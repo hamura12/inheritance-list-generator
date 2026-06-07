@@ -513,10 +513,13 @@ h2, [data-testid="stSubheader"] > div {
     letter-spacing: 0.08em !important;
     width: 100% !important;
     box-shadow: 0 3px 12px rgba(27,36,54,.32) !important;
-    transition: all .2s ease !important;
+    transition: border-color .2s ease, box-shadow .2s ease !important;
 }
-.stButton > button[kind="primary"]:hover {
-    background: #1b2436 !important;
+.stButton > button[kind="primary"]:hover,
+.stButton > button[kind="primary"]:focus,
+.stButton > button[kind="primary"]:active {
+    background: linear-gradient(180deg, #2c3a57 0%, #1b2436 100%) !important;
+    color: #f5f0e6 !important;
     border-color: #a9853f !important;
     box-shadow: 0 6px 18px rgba(27,36,54,.42) !important;
 }
