@@ -42,7 +42,15 @@ def decide(answers: dict):
 
     # ── 代襲相続（最優先）──────────────────────
     if has_daishuu:
-        return 'daishuu', {}
+        children_data = answers.get('children_data', [])
+        params = {
+            'has_spouse':    has_spouse,
+            'children_data': children_data,
+        }
+        if appl_start and appl_end:
+            params['appl_start'] = appl_start
+            params['appl_end']   = appl_end
+        return 'daishuu', params
 
     # ── 子あり ──────────────────────────────────
     if has_children:

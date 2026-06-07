@@ -141,7 +141,8 @@ def _compute_candidates(has_spouse, has_children, num_children,
 
 def _generate_preview_svg(has_spouse, has_children, num_children,
                            parents_status, has_siblings, siblings_data,
-                           which_parent, has_daishuu, appl_label):
+                           which_parent, has_daishuu, appl_label,
+                           children_data=None):
     """相続関係のSVGプレビューを生成してHTML文字列を返す。"""
     BW, BH  = 100, 42
     NAVY    = '#1b2436'
@@ -224,13 +225,62 @@ def _generate_preview_svg(has_spouse, has_children, num_children,
     els = []
 
     # ─── 代襲相続 ───────────────────────────────────────────
-    if has_daishuu:
-        els.append(box(W // 2, 110, '被相続人', dec=True))
-        els.append(
-            f'<text x="{W//2}" y="185" text-anchor="middle" font-size="12" '
-            f'fill="#5A4A3A" font-family="sans-serif">（代襲相続）別途ご確認ください</text>'
-        )
-        return wrap(220, els)
+    if has_daishuu and children_data:
+        cd   = children_data or []
+        n    = len(cd)
+        SHOW = min(n, 4)
+
+        if has_spouse:
+            dec_cx, dec_cy = W // 2 - 80, 90
+            sp_cx          = W // 2 + 80
+            els.append(ml(dec_cx + BW // 2, sp_cx - BW // 2, dec_cy))
+            els.append(box(dec_cx, dec_cy, '被相続人', dec=True))
+            els.append(box(sp_cx,  dec_cy, '配偶者'))
+        else:
+            dec_cx, dec_cy = W // 2, 90
+            els.append(box(dec_cx, dec_cy, '被相続人', dec=True))
+
+        child_y = 230
+        step    = min(140, (W - 60) // max(SHOW, 1))
+        start_x = W // 2 - step * (SHOW - 1) // 2
+        mid_y   = (dec_cy + BH // 2 + child_y - BH // 2) // 2
+
+        els.append(vl(dec_cx, dec_cy + BH // 2, mid_y))
+        if SHOW > 1:
+            els.append(hl(start_x, start_x + step * (SHOW - 1), mid_y))
+
+        max_y = child_y
+        for j in range(SHOW):
+            cx    = start_x + j * step
+            child = cd[j] if j < len(cd) else {'alive': True, 'num_grandchildren': 0}
+            alive = child.get('alive', True)
+            num_gc = child.get('num_grandchildren', 0)
+            lbl   = (f'子{j + 1}〜子{n}'
+                     if (n > SHOW and j == SHOW - 1) else f'子{j + 1}')
+            els.append(vl(cx, mid_y, child_y - BH // 2))
+            els.append(box(cx, child_y, lbl, dead=not alive))
+
+            if not alive and num_gc > 0:
+                SHOW_GC = min(num_gc, 2)
+                gc_y    = child_y + 120
+                max_y   = max(max_y, gc_y)
+                gc_step = 75
+                gc_start_x = cx - (SHOW_GC - 1) * gc_step // 2
+                gc_mid_y   = (child_y + BH // 2 + gc_y - BH // 2) // 2
+                els.append(vl(cx, child_y + BH // 2, gc_mid_y))
+                if SHOW_GC > 1:
+                    els.append(hl(gc_start_x,
+                                  gc_start_x + gc_step * (SHOW_GC - 1),
+                                  gc_mid_y))
+                for k in range(SHOW_GC):
+                    gcx = gc_start_x + k * gc_step
+                    els.append(vl(gcx, gc_mid_y, gc_y - BH // 2))
+                    label = (f'孫{k + 1}' if num_gc <= SHOW_GC
+                             else (f'孫{k + 1}' if k < SHOW_GC - 1
+                                   else f'孫{k + 1}〜{num_gc}'))
+                    els.append(box(gcx, gc_y, label))
+
+        return wrap(max_y + BH // 2 + 50, els)
 
     # ─── 子あり ──────────────────────────────────────────────
     if has_children:
@@ -730,9 +780,10 @@ has_children = st.radio(
     key=f'has_children_{_k}',
 ) == 'はい'
 
-# 子あり → 人数 ＋ 代襲相続
-num_children = 1
-has_daishuu  = False
+# 子あり → 人数 ＋ 各子の状態
+num_children  = 1
+has_daishuu   = False
+children_data = []
 
 if has_children:
     num_children = st.number_input(
@@ -740,10 +791,27 @@ if has_children:
         min_value=1, max_value=99, value=1, step=1,
         key=f'num_children_{_k}',
     )
-    has_daishuu = st.checkbox(
-        '代襲相続が生じている（子が被相続人より先に死亡し、その子＝孫が相続人となる場合）',
-        key=f'has_daishuu_{_k}',
-    )
+    st.caption('各お子さまの状態を入力してください。')
+    for _i in range(1, int(num_children) + 1):
+        _cols = st.columns([3, 3])
+        with _cols[0]:
+            _child_status = st.radio(
+                f'子{_i}',
+                ['生存', '死亡（代襲相続あり）'],
+                horizontal=True,
+                key=f'child_{_i}_status_{_k}',
+            )
+        _alive = (_child_status == '生存')
+        _num_gc = 0
+        if not _alive:
+            with _cols[1]:
+                _num_gc = st.number_input(
+                    f'孫（子{_i}の子）の人数',
+                    min_value=1, max_value=99, value=1, step=1,
+                    key=f'child_{_i}_gc_{_k}',
+                )
+        children_data.append({'alive': _alive, 'num_grandchildren': int(_num_gc)})
+    has_daishuu = any(not c['alive'] for c in children_data)
 
 # ── ③ 親（子なしの場合のみ表示）────────────────────────────
 parents_status = '両親とも死亡'
@@ -844,6 +912,7 @@ st.markdown(
         has_spouse, has_children, num_children,
         parents_status, has_siblings, siblings_data,
         which_parent, has_daishuu, appl_label,
+        children_data=children_data,
     ),
     unsafe_allow_html=True,
 )
@@ -855,6 +924,7 @@ if st.button('フォーマットを生成する', type='primary'):
         'has_spouse':         has_spouse,
         'has_children':       has_children,
         'num_children':       int(num_children),
+        'children_data':      children_data,
         'both_parents_alive': parents_status == '両親とも存命',
         'one_parent_alive':   parents_status == '父または母のみ存命',
         'which_parent':       which_parent,
