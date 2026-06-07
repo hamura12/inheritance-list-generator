@@ -577,6 +577,49 @@ hr {
 /* ── セレクトボックス ── */
 .stSelectbox > div > div { border-radius: 2px !important; }
 
+/* ── アニメーション定義 ── */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes expandRule {
+    from { width: 0; opacity: 0; }
+    to   { width: 60px; opacity: 1; }
+}
+@keyframes subtleGlow {
+    0%, 100% { box-shadow: 0 3px 12px rgba(27,36,54,.32); }
+    50%       { box-shadow: 0 4px 22px rgba(169,133,63,.5),
+                            0 0 0 3px rgba(169,133,63,.18); }
+}
+
+/* ── ヘッダーアニメーション ── */
+.app-header-label {
+    animation: fadeInDown 0.55s ease both;
+}
+.app-header h1 {
+    animation: fadeInUp 0.65s ease 0.2s both;
+}
+.app-header-rule {
+    animation: expandRule 0.6s ease 0.5s both;
+}
+.app-header p {
+    animation: fadeInUp 0.6s ease 0.65s both;
+}
+
+/* ── 生成ボタン：控えめなゴールドグロー脈動 ── */
+.stButton > button[kind="primary"] {
+    animation: subtleGlow 3.5s ease-in-out infinite !important;
+}
+.stButton > button[kind="primary"]:hover,
+.stButton > button[kind="primary"]:focus,
+.stButton > button[kind="primary"]:active {
+    animation: none !important;
+}
+
 /* ── ラジオボタン → トグルボタン風 ── */
 
 /* radio-group を横並びボタン帯に */
