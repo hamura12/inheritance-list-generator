@@ -144,15 +144,15 @@ def _generate_preview_svg(has_spouse, has_children, num_children,
                            which_parent, has_daishuu, appl_label):
     """相続関係のSVGプレビューを生成してHTML文字列を返す。"""
     BW, BH  = 100, 42
-    NAVY    = '#1B2A4A'
-    GOLD    = '#B8960C'
+    NAVY    = '#1b2436'
+    GOLD    = '#a9853f'
     WHITE   = '#FFFFFF'
-    HEIR_BG = '#EDE8DF'
-    DEAD_BG = '#C5BDB0'
-    APPL_BG = '#FFF8E1'
-    TDARK   = '#1A2030'
-    TDEAD   = '#5A4F47'
-    LC      = '#4A5A7A'
+    HEIR_BG = '#f5f0e6'
+    DEAD_BG = '#cfc7b4'
+    APPL_BG = '#fdf5e4'
+    TDARK   = '#262420'
+    TDEAD   = '#6c6555'
+    LC      = '#6c7a8a'
     W       = 720
 
     def box(cx, cy, label, dec=False, appl=False, dead=False):
@@ -211,9 +211,10 @@ def _generate_preview_svg(has_spouse, has_children, num_children,
 
     def wrap(h, els):
         return (
-            '<div style="background:#D4C5AE;border-radius:8px;'
-            'padding:16px 20px 10px;margin:16px 0;border:1px solid #B8A882;">'
-            '<p style="text-align:center;font-size:0.78rem;color:#6B5040;'
+            '<div style="background:#fffdf8;border-radius:2px;'
+            'padding:16px 20px 10px;margin:16px 0;'
+            'border:1px solid #cfc7b4;border-top:3px solid #1b2436;">'
+            '<p style="text-align:center;font-size:0.78rem;color:#6c6555;'
             'margin:0 0 8px;font-weight:600;letter-spacing:2px;">相 続 関 係 プ レ ビ ュ ー</p>'
             f'<svg viewBox="0 0 {W} {h}" width="100%" xmlns="http://www.w3.org/2000/svg">'
             + ''.join(els) +
@@ -413,15 +414,14 @@ _k = st.session_state.run_id
 # ── カスタムCSS ────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
-/* 全体背景・フォント */
+/* ── 全体 ── */
 .stApp {
-    background-color: #C8B89A;
-    font-family: 'Noto Sans JP', sans-serif;
+    background-color: #e9e4d8;
+    background-image: radial-gradient(circle at 50% -100px, #f4efe4, #e9e4d8 65%);
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
 }
-
-/* メインコンテナ */
 .block-container {
     padding-top: 0 !important;
     padding-bottom: 3rem;
@@ -430,147 +430,146 @@ st.markdown("""
 
 /* ── ヘッダー ── */
 .app-header {
-    background: linear-gradient(160deg, #0D1B33 0%, #1A3056 60%, #0D1B33 100%);
-    padding: 2.2rem 2.5rem 2rem 2.5rem;
-    margin-bottom: 1.8rem;
-    border-bottom: 3px solid #B8960C;
-    position: relative;
-    overflow: hidden;
-}
-.app-header::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 40px,
-        rgba(255,255,255,0.015) 40px,
-        rgba(255,255,255,0.015) 80px
-    );
+    background: linear-gradient(180deg, #232f47 0%, #1b2436 100%);
+    border-bottom: 3px solid #a9853f;
+    box-shadow: 0 3px 16px rgba(0,0,0,.28);
+    padding: 2.2rem 2.5rem 1.8rem;
+    margin-bottom: 1.6rem;
+    text-align: center;
 }
 .app-header-label {
-    color: #B8960C;
+    color: #a9853f;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 3px;
     text-transform: uppercase;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
 }
 .app-header h1 {
-    color: #FFFFFF !important;
+    color: #f5f0e6 !important;
     font-family: 'Noto Serif JP', serif !important;
-    font-size: 1.7rem !important;
-    font-weight: 700 !important;
-    margin: 0 0 0.5rem 0 !important;
-    letter-spacing: 1px;
+    font-size: 1.75rem !important;
+    font-weight: 600 !important;
+    margin: 0 0 0 0 !important;
+    letter-spacing: 0.1em;
     line-height: 1.3 !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
 }
 .app-header p {
-    color: rgba(255,255,255,0.65) !important;
-    font-size: 0.82rem !important;
+    color: #cabf9f !important;
+    font-size: 0.83rem !important;
     margin: 0 !important;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.02em;
+    line-height: 1.8 !important;
 }
 .app-header-rule {
+    width: 60px;
+    height: 2px;
+    background: #a9853f;
+    margin: 14px auto 14px;
     border: none;
-    border-top: 1px solid rgba(184,150,12,0.4);
-    margin: 1rem 0 0.8rem 0;
 }
 
 /* ── セクション見出し ── */
 h2, [data-testid="stSubheader"] > div {
-    color: #FFFFFF !important;
+    color: #1b2436 !important;
+    font-family: 'Noto Serif JP', serif !important;
+    font-size: 1.05rem !important;
     font-weight: 700 !important;
-    font-size: 0.88rem !important;
-    letter-spacing: 1.5px !important;
-    background: linear-gradient(90deg, #0D1B33, #1A3056) !important;
-    padding: 0.55rem 1rem 0.55rem 1.1rem !important;
-    border-left: 4px solid #B8960C !important;
+    letter-spacing: 0.05em !important;
+    background: #fffdf8 !important;
+    padding: 0.65rem 1rem 0.65rem 1.1rem !important;
+    border: 1px solid #cfc7b4 !important;
+    border-top: 3px solid #1b2436 !important;
     border-radius: 2px !important;
-    margin-top: 0.8rem !important;
+    margin-top: 1rem !important;
     margin-bottom: 0.8rem !important;
-    box-shadow: 0 2px 8px rgba(13,27,51,0.2) !important;
+    box-shadow: 0 1px 6px rgba(40,36,32,.09) !important;
 }
 
-/* ── 入力エリアの背景 ── */
+/* ── 入力エリア ── */
 .stRadio, .stCheckbox, .stNumberInput, .stSelectbox {
-    background-color: #B5A282;
+    background-color: #fffdf8;
     padding: 0.3rem 0.8rem;
-    border-radius: 4px;
+    border-radius: 2px;
+    border: 1px solid #e8e2d6;
+    margin-bottom: 2px;
 }
-
-/* ── ラジオ・チェックボックス ── */
 .stRadio label, .stCheckbox label {
-    color: #1A2A42 !important;
-    font-weight: 500 !important;
+    color: #262420 !important;
+    font-weight: 400 !important;
 }
 
 /* ── 生成ボタン ── */
 .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #0D1B33 0%, #1A3056 100%) !important;
-    color: #FFFFFF !important;
-    border: 1px solid #B8960C !important;
-    border-radius: 3px !important;
-    padding: 0.75rem 2rem !important;
-    font-size: 0.95rem !important;
+    background: linear-gradient(180deg, #2c3a57 0%, #1b2436 100%) !important;
+    color: #f5f0e6 !important;
+    border: 1px solid #1b2436 !important;
+    border-radius: 2px !important;
+    padding: 1rem 2rem !important;
+    font-size: 1.05rem !important;
     font-weight: 700 !important;
-    letter-spacing: 2px !important;
+    font-family: 'Noto Serif JP', serif !important;
+    letter-spacing: 0.08em !important;
     width: 100% !important;
-    box-shadow: 0 4px 16px rgba(13,27,51,0.35), inset 0 1px 0 rgba(255,255,255,0.07) !important;
-    transition: all 0.2s ease !important;
+    box-shadow: 0 3px 12px rgba(27,36,54,.32) !important;
+    transition: all .2s ease !important;
 }
 .stButton > button[kind="primary"]:hover {
-    background: linear-gradient(135deg, #162340 0%, #223D6A 100%) !important;
-    box-shadow: 0 6px 20px rgba(13,27,51,0.5), 0 0 0 1px #B8960C !important;
+    background: #1b2436 !important;
+    border-color: #a9853f !important;
+    box-shadow: 0 6px 18px rgba(27,36,54,.42) !important;
 }
 
 /* ── ダウンロードボタン ── */
 .stDownloadButton > button {
-    background: linear-gradient(135deg, #0D1B33, #1A3056) !important;
-    color: #FFD166 !important;
-    border: 1px solid #B8960C !important;
-    border-radius: 3px !important;
+    background: linear-gradient(180deg, #2c3a57, #1b2436) !important;
+    color: #f5f0e6 !important;
+    border: 1px solid #a9853f !important;
+    border-radius: 2px !important;
     width: 100% !important;
-    font-size: 0.95rem !important;
+    font-size: 1.05rem !important;
     font-weight: 700 !important;
-    letter-spacing: 1.5px !important;
+    font-family: 'Noto Serif JP', serif !important;
+    letter-spacing: 0.05em !important;
     padding: 0.75rem !important;
-    box-shadow: 0 4px 16px rgba(13,27,51,0.35) !important;
+    box-shadow: 0 3px 12px rgba(27,36,54,.3) !important;
 }
-
-/* ── 区切り線 ── */
-hr {
-    border: none !important;
-    border-top: 1px solid #C8CDD8 !important;
-    margin: 1.2rem 0 !important;
-}
-
-/* ── キャプション ── */
-.stCaption { color: #6B7A95 !important; font-size: 0.8rem !important; }
-
-/* ── セレクトボックス ── */
-.stSelectbox > div > div { border-radius: 3px !important; }
 
 /* ── リセットボタン ── */
 .stButton > button[kind="secondary"] {
     background: transparent !important;
-    color: #4A5A7A !important;
-    border: 1px solid #8A9AB8 !important;
-    border-radius: 3px !important;
+    color: #6c6555 !important;
+    border: 1px solid #cfc7b4 !important;
+    border-radius: 2px !important;
     font-size: 0.8rem !important;
     font-weight: 500 !important;
     padding: 0.3rem 0.9rem !important;
     width: auto !important;
     box-shadow: none !important;
-    letter-spacing: 0.5px !important;
+    letter-spacing: 0.3px !important;
 }
 .stButton > button[kind="secondary"]:hover {
-    background: rgba(26,48,86,0.08) !important;
-    border-color: #4A5A7A !important;
-    color: #1B2A4A !important;
+    background: rgba(27,36,54,.06) !important;
+    border-color: #1b2436 !important;
+    color: #1b2436 !important;
     box-shadow: none !important;
 }
+
+/* ── 区切り線 ── */
+hr {
+    border: none !important;
+    border-top: 1px solid #cfc7b4 !important;
+    margin: 1.2rem 0 !important;
+}
+
+/* ── キャプション・リンク ── */
+.stCaption { color: #6c6555 !important; font-size: 0.82rem !important; }
+.stMarkdown a { color: #a9853f !important; }
+.stMarkdown a:hover { color: #1b2436 !important; }
+
+/* ── セレクトボックス ── */
+.stSelectbox > div > div { border-radius: 2px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -579,8 +578,9 @@ st.markdown("""
 <div class="app-header">
     <div class="app-header-label">Legal Document Tool</div>
     <h1>法定相続情報一覧図　作成ツール</h1>
-    <hr class="app-header-rule">
-    <p>必要最低限の情報を入力するだけで、法務局提出用のエクセルファイルを自動生成します。</p>
+    <div class="app-header-rule"></div>
+    <p>法務局の法定相続情報証明制度に対応したExcelファイルを自動生成します。<br>
+    氏名・住所・日付等は出力後に手入力してください。</p>
 </div>
 """, unsafe_allow_html=True)
 
