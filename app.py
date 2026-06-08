@@ -919,6 +919,18 @@ st.markdown(
 
 # ── 生成ボタン ───────────────────────────────────────────────
 st.divider()
+
+if has_daishuu:
+    st.markdown(
+        '<div style="background:#fff8e1;border:1px solid #f0a500;border-left:5px solid #f0a500;'
+        'border-radius:4px;padding:0.8rem 1rem;margin-bottom:0.8rem;">'
+        '<strong>⚠️ この書式は現在調整中です</strong><br>'
+        '「②の子について 代襲相続が発生している場合」のフォーマットは現在整備中のため、'
+        '出力されるファイルは完全ではない場合があります。'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
 if st.button('フォーマットを生成する', type='primary'):
     answers = {
         'has_spouse':         has_spouse,
