@@ -124,8 +124,8 @@ def _sN(ws, n):
 
     _base_borders(ws)
     # 半血：（　）ラベル
-    merge(ws,'D22','E22','（　）',alignment=al(2))
-    merge(ws,'D27','E27','（　）',alignment=al(2))
+    merge(ws,'D18','E19','（　）',alignment=al(2))
+    merge(ws,'D24','E25','（　）',alignment=al(2))
     merge(ws,f'D{wr-1}',f'E{wr-1}','（　）',alignment=al(2))
 
     # E列延長二重線（半血特有）：row 26 〜 creator行まで
@@ -197,8 +197,8 @@ def _build_sheet(wb, n, appl_start='X24', appl_end='AA25'):
         merge(ws,'P33','T33','以下余白',alignment=al(2))
         _creator_s(ws, 41)
         _base_borders(ws)
-        merge(ws,'D22','E22','（　）',alignment=al(2))
-        merge(ws,'D27','E27','（　）',alignment=al(2))
+        merge(ws,'D18','E19','（　）',alignment=al(2))
+        merge(ws,'D24','E25','（　）',alignment=al(2))
         for r in range(26,42): set_border(ws,r,5,left=6)
         # 兄弟姉妹2のK列罫線
         set_border(ws,25,11,top=1,left=1)
@@ -236,8 +236,8 @@ def _build_sheet(wb, n, appl_start='X24', appl_end='AA25'):
         merge(ws,'P39','T39','以下余白',alignment=al(2))
         _creator_s(ws, 42)
         _base_borders(ws)
-        merge(ws,'D22','E22','（　）',alignment=al(2))
-        merge(ws,'D27','E27','（　）',alignment=al(2))
+        merge(ws,'D18','E19','（　）',alignment=al(2))
+        merge(ws,'D24','E25','（　）',alignment=al(2))
         merge(ws,'D38','E38','（　）',alignment=al(2))
         for r in range(26,43): set_border(ws,r,5,left=6)
         # 兄弟姉妹2のK列罫線
