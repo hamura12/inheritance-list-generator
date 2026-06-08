@@ -762,6 +762,21 @@ st.markdown(
     '(https://houmukyoku.moj.go.jp/homu/page7_000014.html)',
 )
 
+# ── 個人情報の取り扱いに関するお願い ──────────────────────────
+st.markdown(
+    '<div style="background:#eef3f8;border:1px solid #b9c7d8;'
+    'border-left:5px solid #1b2436;border-radius:4px;'
+    'padding:0.85rem 1.1rem;margin:0.8rem 0;line-height:1.7;">'
+    '<strong>🔒 個人情報の入力について（お願い）</strong><br>'
+    'このツールでは、<strong>氏名・住所・生年月日などの個人情報は入力しないでください。</strong><br>'
+    'これらの情報は、ファイルを<strong>ダウンロードした後</strong>、'
+    'お手元のExcel（黄色のセル）にご自身で入力してください。<br>'
+    '<span style="font-size:0.85rem;color:#6c6555;">'
+    '※ 本ツールは空欄のひな形を作成するもので、入力内容を保存・送信することはありません。</span>'
+    '</div>',
+    unsafe_allow_html=True,
+)
+
 # ── リセットボタン ────────────────────────────────────────────
 _sp, _rst = st.columns([5, 1])
 with _rst:
