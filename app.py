@@ -4,6 +4,9 @@ from datetime import date
 import streamlit as st
 from decision import decide, TEMPLATES
 
+# ── 最終修正日（更新のたびにここを変更）──────────────────────
+LAST_UPDATED = '2026年6月8日'
+
 
 # ── 申出人候補の計算 ────────────────────────────────────────────
 
@@ -842,6 +845,17 @@ st.markdown("""
     氏名・住所・日付等は出力後に手入力してください。</p>
 </div>
 """, unsafe_allow_html=True)
+
+# ── 最終修正日 ───────────────────────────────────────────────
+st.markdown(
+    f'<div style="text-align:right;margin:-0.4rem 0 0.6rem;">'
+    f'<span style="display:inline-block;background:#1b2436;color:#f5f0e6;'
+    f'font-size:0.82rem;font-weight:600;letter-spacing:0.03em;'
+    f'padding:0.28rem 0.85rem;border-radius:2px;'
+    f'border:1px solid #a9853f;">'
+    f'最終修正日：{LAST_UPDATED}</span></div>',
+    unsafe_allow_html=True,
+)
 
 # ── 参考リンク ───────────────────────────────────────────────
 st.markdown(
