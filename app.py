@@ -655,6 +655,22 @@ hr {
     50%       { box-shadow: 0 4px 22px rgba(169,133,63,.5),
                             0 0 0 3px rgba(169,133,63,.18); }
 }
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(.97); }
+    to   { opacity: 1; transform: scale(1); }
+}
+@keyframes floatIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmerLine {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
 
 /* ── ヘッダーアニメーション ── */
 .app-header-label {
@@ -670,6 +686,36 @@ hr {
     animation: fadeInUp 0.6s ease 0.65s both;
 }
 
+/* ── セクション見出し：左からスライドイン＋ホバー ── */
+h2, [data-testid="stSubheader"] > div {
+    animation: fadeInLeft 0.5s ease both;
+    transition: box-shadow .25s ease, transform .25s ease,
+                border-top-color .25s ease !important;
+}
+h2:hover, [data-testid="stSubheader"] > div:hover {
+    transform: translateX(3px);
+    border-top-color: #a9853f !important;
+    box-shadow: 0 3px 14px rgba(40,36,32,.16) !important;
+}
+
+/* ── 入力エリア：登場フェードイン＋ホバーで浮き上がり ── */
+.stRadio, .stCheckbox, .stNumberInput, .stSelectbox {
+    animation: floatIn 0.5s ease both;
+    transition: transform .2s ease, box-shadow .2s ease,
+                border-color .2s ease !important;
+}
+.stRadio:hover, .stCheckbox:hover,
+.stNumberInput:hover, .stSelectbox:hover {
+    transform: translateY(-2px);
+    border-color: #a9853f !important;
+    box-shadow: 0 4px 14px rgba(40,36,32,.12) !important;
+}
+
+/* ── プレビュー枠：ふわっと拡大表示 ── */
+[data-testid="stMarkdown"] div[style*="border-top:3px solid #1b2436"] {
+    animation: scaleIn 0.55s ease both;
+}
+
 /* ── 生成ボタン：控えめなゴールドグロー脈動 ── */
 .stButton > button[kind="primary"] {
     animation: subtleGlow 3.5s ease-in-out infinite !important;
@@ -678,6 +724,47 @@ hr {
 .stButton > button[kind="primary"]:focus,
 .stButton > button[kind="primary"]:active {
     animation: none !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ── ダウンロードボタン：登場＋ホバー浮き上がり ── */
+.stDownloadButton > button {
+    animation: floatIn 0.6s ease both !important;
+    transition: transform .2s ease, box-shadow .2s ease,
+                border-color .2s ease !important;
+}
+.stDownloadButton > button:hover {
+    transform: translateY(-2px) !important;
+    border-color: #f5f0e6 !important;
+    box-shadow: 0 7px 20px rgba(27,36,54,.45) !important;
+}
+
+/* ── 区切り線：ゴールドのきらめき ── */
+hr {
+    background: linear-gradient(90deg,
+        transparent, #cfc7b4 20%, #a9853f 50%, #cfc7b4 80%, transparent) !important;
+    background-size: 200% 100% !important;
+    border: none !important;
+    height: 1px !important;
+    animation: shimmerLine 6s linear infinite !important;
+}
+
+/* ── 折りたたみ（expander）ホバー ── */
+[data-testid="stExpander"] {
+    transition: transform .2s ease, box-shadow .2s ease !important;
+}
+[data-testid="stExpander"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(40,36,32,.1) !important;
+}
+
+/* ── アニメーションを控えたい利用者への配慮 ── */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+    }
 }
 
 /* ── ラジオボタン → トグルボタン風 ── */
