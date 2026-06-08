@@ -58,8 +58,7 @@ def _creator_s(ws, row):
 
 
 def _base_borders(ws):
-    set_border(ws,9,17,right=6)
-    set_border(ws,10,18,left=6)
+    # （注）配偶者なしのため、被相続人の婚姻線（Q9/R10）は引かない
     # K列縦線（被相続人→兄弟姉妹接続）
     set_border(ws,18,11,bottom=1); set_border(ws,18,12,bottom=1)
     set_border(ws,18,13,bottom=1); set_border(ws,18,14,bottom=1); set_border(ws,18,15,bottom=1)
