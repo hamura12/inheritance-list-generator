@@ -139,6 +139,16 @@ def _compute_candidates(has_spouse, has_children, num_children,
 
 # ── 相続関係図プレビュー ──────────────────────────────────────────
 
+def _esc(text: str) -> str:
+    """SVG/HTMLに埋め込む文字列をエスケープしてXSSを防ぐ。"""
+    return (str(text)
+            .replace('&', '&amp;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')
+            .replace('"', '&quot;')
+            .replace("'", '&#x27;'))
+
+
 def _generate_preview_svg(has_spouse, has_children, num_children,
                            parents_status, has_siblings, siblings_data,
                            which_parent, has_daishuu, appl_label,
@@ -171,7 +181,7 @@ def _generate_preview_svg(has_spouse, has_children, num_children,
             f'fill="{bg}" stroke="{sc}" stroke-width="{sw}"/>',
             f'<text x="{cx}" y="{cy+1}" text-anchor="middle" dominant-baseline="middle" '
             f'font-size="12" fill="{tc}" font-weight="bold" '
-            f'font-family="Noto Sans JP,sans-serif">{label}</text>',
+            f'font-family="Noto Sans JP,sans-serif">{_esc(label)}</text>',
         ]
         if dec:
             s.append(
