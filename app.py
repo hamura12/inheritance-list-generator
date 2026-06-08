@@ -1109,8 +1109,10 @@ st.markdown(
     '<div style="background:#f3f0e8;border:1px solid #cfc7b4;'
     'border-left:5px solid #a9853f;border-radius:4px;'
     'padding:0.7rem 1.05rem;margin:0.4rem 0 0.9rem;line-height:1.7;font-size:0.9rem;">'
-    '🤖 以下の各項目（開発について／技術スタック／開発時の指示／解析メモ）は、'
-    '<strong>AI（生成AI）との対話を通じて作成したもの</strong>です。'
+    '🤖 本ツールは、Anthropic社のAIコーディングツール'
+    '<strong>「Claude Code」</strong>との対話を通じて作成しました。<br>'
+    '以下の各項目（開発について／技術スタック／開発時の指示／解析メモ）も、'
+    '同ツールを用いてまとめたものです。'
     '</div>',
     unsafe_allow_html=True,
 )
