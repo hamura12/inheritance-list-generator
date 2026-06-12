@@ -46,36 +46,263 @@ def _apply(ws, bp):
         set_border(ws, r, cc, **sides)
 
 
-def _sheet_name(has_spouse, total_gc, key):
-    if key == "a":
-        return "子1人・孫1人の場合"
-    return f"配偶者・子2人・孫{total_gc}人の場合"
+def _sheet_name_tpl(key, total_gc):
+    if key == 'a':
+        return '子1人・孫1人の場合'
+    return f'配偶者・子2人・孫{total_gc}人の場合'
+
+
+def _normalize(children_data):
+    kids = []
+    for c in (children_data or []):
+        alive = bool(c.get('alive', True))
+        gc = 0 if alive else max(int(c.get('num_grandchildren', 0) or 0), 0)
+        kids.append({'alive': alive, 'gc': gc})
+    if not kids:
+        kids = [{'alive': False, 'gc': 1}]
+    return kids
+
+
+def _match_template(has_spouse, kids):
+    """入力が参考書式（学習資料２）と同一の関係構成なら該当キーを返す。
+
+    参考書式の実際の構成：
+      a  = 配偶者なし・子1人（死亡）・孫1人
+      b2 = 配偶者あり・子2人（1人生存・1人死亡）・孫2人
+      b3 = 配偶者あり・子2人（1人生存・1人死亡）・孫3人
+      b4 = 配偶者あり・子2人（2人とも死亡）・孫1人＋3人
+      b5 = 配偶者あり・子2人（2人とも死亡）・孫2人＋3人
+    """
+    dead = sorted(k['gc'] for k in kids if not k['alive'])
+    alive = sum(1 for k in kids if k['alive'])
+    if not has_spouse:
+        if alive == 0 and dead == [1]:
+            return 'a'
+        return None
+    if len(kids) == 2:
+        if alive == 1 and dead in ([2], [3]):
+            return f'b{dead[0]}'
+        if alive == 0 and dead == [1, 3]:
+            return 'b4'
+        if alive == 0 and dead == [2, 3]:
+            return 'b5'
+    return None
+
+
+def _dyn_name(has_spouse, kids):
+    n = len(kids)
+    gc = sum(k['gc'] for k in kids if not k['alive'])
+    parts = []
+    if has_spouse:
+        parts.append('配偶者')
+    parts.append(f'子{n}人')
+    parts.append(f'孫{gc}人（代襲）')
+    name = '・'.join(parts) + 'の場合'
+    return name if len(name) <= 31 else '代襲相続の場合'
+
+
+def _build_dynamic(ws, has_spouse, kids):
+    """参考書式にない構成を、学習した配置文法から外挿して描画する。
+
+    関係線の文法（学習資料２より解読）:
+      婚姻線   : B/C列境界の二重縦線。被相続人氏名(A16:I16)の下から
+                 配偶者欄(C20:K23)へ。
+      子の幹線 : L列左端の細縦線。婚姻線の中間（行18/19境界）から
+                 横線C-K列で接続し、各子のノード位置に小枝を出す。
+      生存子   : センター上段(行8-14)または左ゾーンのブロック。
+                 氏名欄の中央の高さで幹線に接続。
+      被代襲者 : ラベル(M:R 2行)＋氏名(A:I)＋（…）状態欄(L:T)。
+                 ラベル中央の高さで幹線に接続し、S-T列の横線から
+                 U列の孫幹線へ。
+      孫       : 右ゾーン(V-AF)の8行ブロック。氏名欄の中央の高さで
+                 孫幹線に接続。
+    """
+    set_col_widths(ws)
+    rh = {4: 585, 5: 90, 6: 300, 7: 300, 8: 300, 9: 300, 10: 300,
+          11: 150, 12: 150, 13: 150, 14: 150, 15: 300, 16: 300}
+
+    # ── ヘッダー・被相続人 ──
+    merge(ws, 'I4', 'M4', '被相続人', F14, alignment=al(3))
+    merge(ws, 'N4', 'T4', None, None, YEL)
+    merge(ws, 'U4', 'AA4', '法定相続情報', F14, alignment=al(2))
+    merge(ws, 'A7', 'E7', '最後の住所', alignment=al(1))
+    merge(ws, 'A8', 'K8', None, None, YEL)
+    merge(ws, 'A9', 'E9', '最後の本籍', alignment=al(1))
+    merge(ws, 'A10', 'K10', None, None, YEL)
+    merge(ws, 'A11', 'B12', '出生  ', alignment=al(1))
+    merge(ws, 'C11', 'J12', None, None, YEL)
+    merge(ws, 'A13', 'B14', '死亡  ', alignment=al(1))
+    merge(ws, 'C13', 'J14', None, None, YEL)
+    merge(ws, 'A15', 'E15', '（被相続人）', alignment=al(2))
+    merge(ws, 'A16', 'I16', None, None, YEL)   # 被相続人氏名
+
+    # ── 子の表示順：最初の生存子はセンター上段（b2の文法）──
+    rest = list(kids)
+    top_child = None
+    for i, k in enumerate(rest):
+        if k['alive']:
+            top_child = rest.pop(i)
+            break
+
+    stub_gls = []          # 幹線に接続する子ノードの高さ（行境界）
+    if top_child is not None:
+        merge(ws, 'O8', 'W9', None, None, YEL)
+        merge(ws, 'M9', 'N9', '住所', alignment=al(1))
+        merge(ws, 'M10', 'N10', '出生  ', alignment=al(1))
+        merge(ws, 'O10', 'V10', None, None, YEL)
+        merge(ws, 'M11', 'O12', '（　）', None, YEL, al(1))
+        merge(ws, 'M13', 'S14', None, None, YEL)
+        merge(ws, 'T13', 'W14', '(申出人)', alignment=al(2))
+        stub_gls.append(13)
+
+    FEED_GL = 18           # 婚姻線→幹線の横線（行18/19境界）
+
+    # ── 配偶者と婚姻線 ──
+    if has_spouse:
+        set_border(ws, 17, 3, left=6)
+        set_border(ws, 18, 3, left=6)
+        set_border(ws, 19, 3, top=1, left=6)
+        set_border(ws, 20, 2, right=6)
+        set_border(ws, 21, 2, right=6)
+        merge(ws, 'C20', 'K23', None, None, YEL)
+        for r in range(20, 24):
+            set_border(ws, r, 11, right=1)
+        merge(ws, 'A22', 'B23', '住所　', alignment=al(1))
+        merge(ws, 'A24', 'B24', '出生  ', alignment=al(1))
+        merge(ws, 'C24', 'J24', None, None, YEL)
+        merge(ws, 'A25', 'D26', '（　　　）', None, YEL, al(1))
+        rh.update({17: 300, 18: 150, 19: 150, 20: 150, 21: 150,
+                   22: 150, 23: 150, 24: 300, 25: 150, 26: 150})
+        left_cur = 28
+    else:
+        # 配偶者なし：被相続人氏名から細線で幹線へ
+        set_border(ws, 17, 3, left=1)
+        set_border(ws, 18, 3, left=1)
+        set_border(ws, 19, 3, top=1)
+        rh.update({17: 300, 18: 150, 19: 150})
+        left_cur = 20
+
+    # 幹線への横枝線（C-K列、行18/19境界）
+    for c in range(4, 12):
+        set_border(ws, 19, c, top=1)
+
+    right_cur = 16         # 右ゾーン（孫ブロック）の開始行
+    gc_specs = []          # (被代襲者の接続高さ, [孫氏名の接続高さ...])
+
+    for k in rest:
+        if k['alive']:
+            # ── 生存子（左ゾーン）──
+            r = left_cur
+            merge(ws, f'A{r}', f'B{r+1}', '住所　', alignment=al(1))
+            merge(ws, f'C{r}', f'K{r+1}', None, None, YEL)
+            merge(ws, f'A{r+2}', f'B{r+2}', '出生  ', alignment=al(1))
+            merge(ws, f'C{r+2}', f'J{r+2}', None, None, YEL)
+            merge(ws, f'A{r+3}', f'I{r+4}', None, None, YEL)
+            merge(ws, f'M{r+3}', f'O{r+4}', '（　）', None, YEL, al(1))
+            stub_gls.append(r + 3)
+            rh.update({r: 150, r + 1: 150, r + 2: 300,
+                       r + 3: 300, r + 4: 300, r + 5: 150})
+            left_cur = r + 6
+        else:
+            # ── 被代襲者（死亡した子）──
+            r = left_cur
+            merge(ws, f'M{r}', f'R{r+1}', '被代襲者', alignment=al(2))
+            merge(ws, f'A{r+2}', f'I{r+2}', None, None, YEL)
+            merge(ws, f'L{r+2}', f'T{r+2}',
+                  '（　　　　　　　　　　　　）', None, YEL, al(1))
+            stub_gls.append(r)
+            rh.update({r: 150, r + 1: 150, r + 2: 300, r + 3: 150})
+            # ── この子の孫グループ（右ゾーン）──
+            names = []
+            for _ in range(k['gc']):
+                g = right_cur
+                merge(ws, f'X{g}', f'AF{g+1}', None, None, YEL)
+                merge(ws, f'V{g+1}', f'W{g+1}', '住所', alignment=al(1))
+                merge(ws, f'V{g+2}', f'W{g+3}', '出生  ', alignment=al(1))
+                merge(ws, f'X{g+2}', f'AE{g+3}', None, None, YEL)
+                merge(ws, f'V{g+4}', f'AB{g+5}', '（孫・代襲者）',
+                      alignment=al(1))
+                merge(ws, f'V{g+6}', f'AB{g+7}', None, None, YEL)
+                names.append(g + 6)
+                rh.setdefault(g, 300)
+                for rr in range(g + 1, g + 9):
+                    rh.setdefault(rr, 150)
+                right_cur = g + 9
+            if names:
+                gc_specs.append((r, names))
+                # 被代襲者→孫幹線への横線（S-T列）と（…）右端の縦線
+                set_border(ws, r + 1, 19, top=1)
+                set_border(ws, r + 1, 20, top=1)
+                set_border(ws, r + 2, 20, right=1)
+            left_cur = r + 4
+
+    # ── 子の幹線（L列左端）──
+    lo = min(stub_gls + [FEED_GL])
+    hi = max(stub_gls + [FEED_GL])
+    for rr in range(lo + 1, hi + 1):
+        set_border(ws, rr, 12, left=1)
+    for g in stub_gls:
+        set_border(ws, g + 1, 12, top=1)
+
+    # ── 孫幹線（U列左端）──
+    for fgl, names in gc_specs:
+        lo = min([fgl] + names)
+        hi = max([fgl] + names)
+        for rr in range(lo + 1, hi + 1):
+            set_border(ws, rr, 21, left=1)
+        for g in names:
+            set_border(ws, g + 1, 21, top=1)
+
+    # ── 以下余白・作成者欄 ──
+    e = max(left_cur, right_cur)
+    merge(ws, f'V{e}', f'Z{e}', '以下余白', alignment=al(2))
+    rh[e] = 300
+    b = e + 2
+    set_border(ws, b, 10, top=1, left=1)
+    for c in range(11, 28):
+        set_border(ws, b, c, top=1)
+    set_border(ws, b, 28, top=1, right=1)
+    for rr in range(b + 1, b + 4):
+        set_border(ws, rr, 10, left=1)
+        set_border(ws, rr, 28, right=1)
+    set_border(ws, b + 4, 10, bottom=1, left=1)
+    for c in range(11, 28):
+        set_border(ws, b + 4, c, bottom=1)
+    set_border(ws, b + 4, 28, bottom=1, right=1)
+    set_cell(ws, b + 1, 11, '作成日：', alignment=al(0))
+    merge(ws, f'N{b+1}', f'X{b+1}', None, None, YEL)
+    set_cell(ws, b + 2, 11, '作成者：', alignment=al(0))
+    merge(ws, f'N{b+2}', f'O{b+2}', '住所', alignment=al(1))
+    merge(ws, f'P{b+2}', f'Z{b+2}', None, None, YEL)
+    set_cell(ws, b + 3, 14, '氏名', alignment=al(2))
+    merge(ws, f'P{b+3}', f'V{b+3}', None, None, YEL)
+    rh[b] = 150
+    for rr in range(b + 1, b + 5):
+        rh[rr] = 300
+    for rr in range(6, b + 5):
+        rh.setdefault(rr, 150)
+    set_row_heights(ws, rh)
 
 
 def generate(has_spouse=True, children_data=None,
              appl_start=None, appl_end=None) -> Workbook:
     """子の代襲相続の書式を生成する。
 
-    参考書式（学習資料２）に基づき、配偶者の有無と孫（代襲者）の
-    人数から最も近い公式書式を選んで出力する。
+    参考書式（学習資料２）と同一の関係構成はテンプレートを忠実に
+    再現し、それ以外の構成は学習した配置文法から関係図を外挿して
+    動的に生成する。
     """
-    if not children_data:
-        children_data = [{"alive": False, "num_grandchildren": 1}]
-
-    total_gc = sum(c.get("num_grandchildren", 0)
-                   for c in children_data if not c.get("alive", True))
-    if total_gc < 1:
-        total_gc = 1
-
-    # ── 書式の選択 ──
-    if not has_spouse:
-        key = "a"            # 子1人・孫1人（配偶者なし）
-    else:
-        n = min(max(total_gc, 2), 5)   # 孫2～5人に対応
-        key = f"b{n}"
-
+    kids = _normalize(children_data)
     wb = Workbook()
     wb.remove(wb.active)
-    ws = wb.create_sheet(_sheet_name(has_spouse, min(max(total_gc,2),5), key))
-    _apply(ws, _BP[key])
+
+    key = _match_template(has_spouse, kids)
+    if key:
+        total_gc = sum(k['gc'] for k in kids if not k['alive'])
+        ws = wb.create_sheet(_sheet_name_tpl(key, total_gc))
+        _apply(ws, _BP[key])
+        return wb
+
+    ws = wb.create_sheet(_dyn_name(has_spouse, kids))
+    _build_dynamic(ws, has_spouse, kids)
     return wb
