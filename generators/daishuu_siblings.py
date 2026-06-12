@@ -108,66 +108,57 @@ def _draw_nephew(ws, s):
     fill_yellow(ws, s+3, 16, s+4, 23); merge(ws, f'P{s+3}', f'W{s+4}')
 
 
-def _draw_borders(ws, blocks):
-    """K列・E列罫線を描画。"""
-    # 固定罫線（被相続人→兄弟姉妹接続部）
-    set_border(ws, 9,  17, right=6)
-    set_border(ws, 10, 18, left=6)
+def _draw_borders(ws, blocks, has_spouse):
+    """関係線を描画する。
+
+    文法（子の代襲相続と同じ考え方）:
+      K列(11)幹線 : 被相続人・各兄弟姉妹を結ぶ縦線。
+                    各兄弟姉妹の氏名欄中央の高さに横枝線(K-O列)。
+      M列(13)小幹線: 死亡した兄弟姉妹の横枝線から下ろし、
+                    各甥姪の氏名欄中央の高さに横枝線(M-O列)で接続。
+                    ※甥姪はK列幹線には接続しない（兄弟姉妹の子のため）
+    """
+    # 配偶者の婚姻線（配偶者がいる場合のみ）
+    if has_spouse:
+        set_border(ws, 9,  17, right=6)
+        set_border(ws, 10, 18, left=6)
+
+    # 被相続人→兄弟姉妹幹線の接続部（行18/19境界）
     set_border(ws, 18, 11, bottom=1)
     for c in range(12, 16): set_border(ws, 18, c, bottom=1)
-    set_border(ws, 19, 11, top=1, left=1)
+    set_border(ws, 19, 11, top=1)
     for c in range(12, 16): set_border(ws, 19, c, top=1)
-    set_border(ws, 20, 11, left=1)
-    # E列二重線基本
+
+    # 父母の婚姻線（E列二重線）
     set_border(ws, 22, 5, top=1, left=6)
     for c in range(6, 11): set_border(ws, 22, c, top=1)
-    set_border(ws, 22, 10, right=1); set_border(ws, 22, 11, left=1)
+    set_border(ws, 22, 10, right=1)
     set_border(ws, 20, 5, left=6); set_border(ws, 21, 5, left=6)
-    set_border(ws, 23, 5, left=6); set_border(ws, 23, 11, left=1)
-    set_border(ws, 24, 10, right=1); set_border(ws, 24, 11, left=1)
+    set_border(ws, 23, 5, left=6)
+    set_border(ws, 24, 10, right=1)
 
-    # 各兄弟姉妹グループのK列罫線
-    for i, blk in enumerate(blocks):
+    trunk_end = 19
+    for blk in blocks:
         s = blk['start']
-        is_first = (i == 0)
+        # この兄弟姉妹への横枝線（氏名欄中央の高さ、K-O列）
+        tooth = (s + 3) if blk['alive'] else (s + 4)
+        set_border(ws, tooth, 11, bottom=1)
+        for c in range(12, 16): set_border(ws, tooth, c, bottom=1)
+        trunk_end = max(trunk_end, tooth)
 
-        if not is_first:
-            # セクション区切り（上）
-            set_border(ws, s-2, 11, top=1, left=1)
-            for c in range(12, 16): set_border(ws, s-2, c, top=1)
-            # ギャップ行
-            set_border(ws, s-1, 11, left=1)
-            if i == 1:
-                set_border(ws, s-1, 5, left=6)
+        # 甥姪：死亡兄弟姉妹の横枝線からM列の小幹線で接続
+        if blk['nephew_starts']:
+            sub_teeth = [ns + 3 for ns in blk['nephew_starts']]
+            for r in range(tooth + 1, max(sub_teeth) + 1):
+                set_border(ws, r, 13, left=1)
+            for g in sub_teeth:
+                set_border(ws, g, 13, bottom=1)
+                set_border(ws, g, 14, bottom=1)
+                set_border(ws, g, 15, bottom=1)
 
-        # コンテンツ行の K left
-        if blk['alive']:
-            # 住所(s), 出生(s+1), 続柄(s+2) の3行
-            for r in range(s, s+3):
-                set_border(ws, r, 11, left=1)
-            # name fill 1行目がセクション bottom
-            set_border(ws, s+3, 11, bottom=1, left=1)
-            for c in range(12, 16): set_border(ws, s+3, c, bottom=1)
-        else:
-            # 住所(s), 出生(s+1), 死亡(s+2), 続柄(s+3) の4行
-            for r in range(s, s+4):
-                set_border(ws, r, 11, left=1)
-            if blk['nephew_starts']:
-                # 甥姪ブロックの K left + 各区切り
-                for j, ns in enumerate(blk['nephew_starts']):
-                    # ギャップ行（deceased sibling 内）
-                    set_border(ws, ns-1, 11, left=1)
-                    # 甥姪コンテンツ行
-                    for r in range(ns, ns+3):
-                        set_border(ws, r, 11, left=1)
-                # 最後の甥姪の name fill 1行目で bottom
-                last_ns = blk['nephew_starts'][-1]
-                set_border(ws, last_ns+3, 11, bottom=1, left=1)
-                for c in range(12, 16): set_border(ws, last_ns+3, c, bottom=1)
-            else:
-                # 甥姪なし（死亡だが代襲なし）→ name fill 1行目で bottom
-                set_border(ws, s+4, 11, bottom=1, left=1)
-                for c in range(12, 16): set_border(ws, s+4, c, bottom=1)
+    # K列幹線（行19から最後の兄弟姉妹の横枝線まで連続）
+    for r in range(19, trunk_end + 1):
+        set_border(ws, r, 11, left=1)
 
 
 # ── メイン ──────────────────────────────────────────────────────
@@ -234,4 +225,4 @@ def _build_sheet(wb, has_spouse, has_half_sib, siblings_data, appl_start='X24', 
     _creator(ws, wr + 3)
 
     # 罫線
-    _draw_borders(ws, blocks)
+    _draw_borders(ws, blocks, has_spouse)
